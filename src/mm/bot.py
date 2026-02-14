@@ -351,9 +351,17 @@ class MarketMaker:
                     continue  # Skip to next iteration
 
                 # INVENTORY STOP: Don't quote if position too large (safety backstop)
+                # IMPORTANT: Don't cancel existing orders - they may include profitable exit orders
                 if self._should_stop_quoting(position_qty, mark_price):
-                    await self._cancel_all_orders()
-                    logger.info("⛔ INVENTORY STOP: Position too large, waiting to reduce...")
+                    logger.info("⛔ INVENTORY STOP: Position too large, keeping existing orders but not placing new ones...")
+
+                    # Log current state without canceling orders
+                    pnl_info = ""
+                    if abs(position_qty) > 0.0001 and avg_entry_price > 0:
+                        unrealized_pnl = position_qty * (mark_price - avg_entry_price)
+                        pnl_info = f" | PnL: ${unrealized_pnl:.2f}"
+
+                    logger.info(f"Waiting to reduce position | Mark: {mark_price:.2f} | Pos: {position_qty:.4f}{pnl_info}")
                     await asyncio.sleep(self.cfg.refresh_interval)
                     continue
 
