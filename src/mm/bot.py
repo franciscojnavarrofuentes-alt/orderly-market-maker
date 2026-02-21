@@ -104,12 +104,12 @@ class MarketMaker:
     def _should_stop_quoting(self, position_qty: float, mark_price: float) -> bool:
         """Stop quoting if position is too large relative to collateral
 
-        Stop when position > 60% of max safe position
+        Stop when position > max safe position (0.4 ETH)
         Fixed: Use reference price to prevent stop triggers on favorable price moves
         """
         COLLATERAL_USD = 100.0
         MAX_LEVERAGE = 8.0
-        STOP_THRESHOLD = 0.6  # Stop at 60% of max position
+        STOP_THRESHOLD = 1.0  # Stop at 100% of max position (0.4 ETH)
         REFERENCE_ETH_PRICE = 2000.0  # Use fixed reference price for inventory limits
 
         # Use reference price instead of current mark price
@@ -119,7 +119,7 @@ class MarketMaker:
         stop_position = max_position_eth * STOP_THRESHOLD
 
         if abs(position_qty) > stop_position:
-            logger.warning(f"⚠️  INVENTORY STOP: Position {position_qty:.4f} > {stop_position:.4f} (60% of max @ ${REFERENCE_ETH_PRICE})")
+            logger.warning(f"⚠️  INVENTORY STOP: Position {position_qty:.4f} > {stop_position:.4f} (max @ ${REFERENCE_ETH_PRICE})")
             return True
 
         return False
